@@ -252,6 +252,7 @@
                 <option value="18" {{ if .DisplayExecTime }}selected{{ end }}>Execution Time</option>
                 <option value="19" {{ if .DisplayBuilder }}selected{{ end }}>Builder</option>
                 <option value="20" {{ if .DisplayBuilderPayment }}selected{{ end }}>Payload Vote Quorum</option>
+                <option value="21" {{ if .DisplayClientData }}selected{{ end }}>Client Data</option>
                 <option value="11" {{ if .DisplayGraffiti }}selected{{ end }}>Graffiti</option>
                 <option value="12" {{ if .DisplayElExtraData }}selected{{ end }}>Extra Data</option>
               </select>
@@ -308,6 +309,7 @@
                 {{ if .DisplaySyncAgg }}<th>Sync<span class="d-none d-lg-inline"> Agg</span> %</th>{{ end }}
                 {{ if .DisplayBuilder }}<th>Builder</th>{{ end }}
                 {{ if .DisplayBuilderPayment }}<th>Vote %</th>{{ end }}
+                {{ if .DisplayClientData }}<th><span data-bs-toggle="tooltip" data-bs-placement="top" title="The clients used by the proposer for attesting to the chain and verifying the chain's correctness. These are not necessarily the clients used to propose the block.">Client Data</span></th>{{ end }}
                 {{ if .DisplayMevBlock }}<th>MEV Block</th>{{ end }}
                 {{ if .DisplayGasLimit }}<th>Gas Limit</th>{{ end }}
                 {{ if .DisplayBlockSize }}<th>Block Size</th>{{ end }}
@@ -394,6 +396,36 @@
                     {{- end }}
                     {{- if $g.DisplayBuilderPayment }}
                       <td>{{ if $slot.HasBuilderPayment }}<span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{{ formatEthAddCommasFromGwei $slot.BuilderPaymentWeight }} ETH of {{ formatEthAddCommasFromGwei $slot.BuilderPaymentBase }} ETH per-slot base — quorum ≥{{ $g.BuilderPaymentQuorum }}%" class="{{ if $slot.BuilderPaymentMetQuorum }}text-success{{ else }}text-danger{{ end }}">{{ formatFloat $slot.BuilderPaymentPercent 1 }}%</span>{{ end }}</td>
+                    {{- end }}
+                    {{- if $g.DisplayClientData }}
+                      <td>
+                        {{- if and (not (eq $slot.Status 0)) $slot.ClientData }}
+                          {{- with $slot.ClientData }}
+                            <div class="d-flex align-items-center flex-wrap gap-1">
+                              <span class="badge rounded-pill text-bg-secondary">{{ .Setup }}</span>
+                              <span class="badge rounded-pill text-bg-light" data-bs-toggle="tooltip" data-bs-placement="top" title="Attestation agreement threshold">{{ .ThresholdLabel }}</span>
+                              {{ if .IsEmpty }}
+                                <span class="badge rounded-pill text-bg-warning">No report</span>
+                              {{ else if not .HasReportedPairs }}
+                                <span class="badge rounded-pill text-bg-warning">No client pairs</span>
+                              {{ end }}
+                            </div>
+                            {{ if .HasReportedPairs }}
+                              <div class="d-flex flex-wrap gap-1 mt-1">
+                                {{ range .Pairs }}
+                                  {{ if not .IsPlaceholder }}
+                                    <span class="d-inline-flex align-items-center border rounded px-1 py-1 bg-body-tertiary">
+                                      <span class="badge rounded-pill {{ .CLBadgeClass }} me-1">{{ .CLName }}</span>
+                                      <i class="fas fa-plus text-muted mx-1" style="font-size: 0.65rem;"></i>
+                                      <span class="badge rounded-pill {{ .ELBadgeClass }}">{{ .ELName }}</span>
+                                    </span>
+                                  {{ end }}
+                                {{ end }}
+                              </div>
+                            {{ end }}
+                          {{- end }}
+                        {{- end }}
+                      </td>
                     {{- end }}
                     {{- if $g.DisplayMevBlock }}
                       <td>{{ if not (eq $slot.Status 0) }}

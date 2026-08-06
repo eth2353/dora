@@ -54,6 +54,7 @@ type SlotsFilteredPageData struct {
 	DisplayExecTime       bool    `json:"dp_exectime"`
 	DisplayBuilder        bool    `json:"dp_builder"`
 	DisplayBuilderPayment bool    `json:"dp_builderpayment"`
+	DisplayClientData     bool    `json:"dp_client_data"`
 	BuilderPaymentQuorum  float64 `json:"builder_payment_quorum"`
 	DisplayColCount       uint64  `json:"display_col_count"`
 
@@ -129,4 +130,5 @@ type SlotsFilteredPageDataSlot struct {
 	BuilderPaymentBase      uint64                `json:"builder_payment_base"`
 	BuilderPaymentPercent   float64               `json:"builder_payment_percent"`
 	BuilderPaymentMetQuorum bool                  `json:"builder_payment_met_quorum"`
+	ClientData              *SlotPageClientData   `json:"client_data"`
 }

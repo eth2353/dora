@@ -281,6 +281,7 @@ func buildFilteredSlotsPageData(ctx context.Context, pageIdx uint64, pageSize ui
 			18: hasSnooperClients,  // Enable exec time if snooper clients exist
 			19: false,              // Builder (opt-in; proposer column already shows build source)
 			20: false,              // Builder Payment / Vote Quorum (opt-in; Gloas only)
+			21: false,              // Client Data (opt-in; loads block bodies)
 		}
 	} else {
 		displayMask := uint64(0)
@@ -365,6 +366,7 @@ func buildFilteredSlotsPageData(ctx context.Context, pageIdx uint64, pageSize ui
 		DisplayExecTime:       displayMap[18],
 		DisplayBuilder:        displayMap[19],
 		DisplayBuilderPayment: displayMap[20],
+		DisplayClientData:     displayMap[21],
 		BuilderPaymentQuorum:  statetransition.BuilderPaymentQuorumPercent,
 		DisplayColCount:       uint64(len(displayMap)),
 
@@ -564,6 +566,17 @@ func buildFilteredSlotsPageData(ctx context.Context, pageIdx uint64, pageSize ui
 			if dbBlock.Block.EthBlockNumber != nil {
 				slotData.WithEthBlock = true
 				slotData.EthBlockNumber = *dbBlock.Block.EthBlockNumber
+			}
+
+			if pageData.DisplayClientData && dbBlock.Block.Status > 0 && len(dbBlock.Block.Root) == 32 {
+				var blockRoot phase0.Root
+				copy(blockRoot[:], dbBlock.Block.Root)
+				blockDetails, err := services.GlobalBeaconService.GetSlotDetailsByBlockroot(ctx, blockRoot)
+				if err != nil {
+					logrus.WithError(err).Debugf("could not load client data for slot %v block 0x%x", slotData.Slot, blockRoot)
+				} else if blockDetails != nil && blockDetails.Block != nil && blockDetails.Block.Message != nil && blockDetails.Block.Message.Body != nil {
+					slotData.ClientData = decodeSlotPageClientData(blockDetails.Block.Message.Body.ClientData, blockDetails.Block.Version)
+				}
 			}
 
 			payloadStatus := dbBlock.Block.PayloadStatus
